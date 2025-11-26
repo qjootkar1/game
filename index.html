@@ -212,16 +212,17 @@
         </div>
     </div>
 
-    <script type="module">
-        // Three.js 및 관련 모듈 로드
-        import * as THREE from 'https://cdn.skypack.dev/three@0.181.0';
-        import { PointerLockControls } from 'https://cdn.skypack.dev/three@0.181.0/examples/jsm/controls/PointerLockControls.js';
-        import { EffectComposer } from 'https://cdn.skypack.dev/three@0.181.0/examples/jsm/postprocessing/EffectComposer.js';
-        import { RenderPass } from 'https://cdn.skypack.dev/three@0.181.0/examples/jsm/postprocessing/RenderPass.js';
-        import { UnrealBloomPass } from 'https://cdn.skypack.dev/three@0.181.0/examples/jsm/postprocessing/UnrealBloomPass.js';
-        import { FilmPass } from 'https://cdn.skypack.dev/three@0.181.0/examples/jsm/postprocessing/FilmPass.js';
+    <!-- Three.js 및 추가 모듈을 <script> 태그로 로드 -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.181.0/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.181.0/examples/js/controls/PointerLockControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.181.0/examples/js/postprocessing/EffectComposer.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.181.0/examples/js/postprocessing/RenderPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.181.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.181.0/examples/js/postprocessing/FilmPass.js"></script>
 
-        // 전역 변수
+    <script>
+        // 이제 THREE는 전역 변수로 사용 가능
+        // 게임 상태 변수
         let scene, camera, renderer, composer;
         let controls;
         let moveForward = false;
@@ -264,36 +265,31 @@
         // 오디오 초기화 (사용자 제스처 내에서만 호출!)
         function initAudio() {
             if (audioInitialized) return;
-            
-            // AudioContext 생성 (사용자 제스처 필요)
             const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContext) return;
+
             const audioCtx = new AudioContext();
-            
-            // 무음 버퍼 재생 → AudioContext 활성화
             const buffer = audioCtx.createBuffer(1, 1, 22050);
             const source = audioCtx.createBufferSource();
             source.buffer = buffer;
             source.connect(audioCtx.destination);
             source.start(0);
 
-            // 배경음악
             backgroundMusic = new Audio();
             backgroundMusic.src = 'https://cdn.pixabay.com/download/audio/2022/03/15/audio_3a7e4d6c1c.mp3?filename=cinematic-ambient-cyberpunk-122197.mp3';
             backgroundMusic.loop = true;
             backgroundMusic.volume = 0.4;
 
-            // 사운드 효과 (간단한 데이터 URI로 대체 - 브라우저 호환성 확보)
-            shootSound = new Audio("data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=");
+            // 사운드는 짧은 데이터 URI로 대체 (브라우저 호환성 확보)
+            shootSound = new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YUQAAACBhYqFfHl1cGtqamloZ2ZlZGNiYWBfXl1cW1pZWFdWVVRTUlFQT05NTEtKSUhHRkVEQ0JBQD8+PTw7Ojk4NzY1NDMyMTAvLi0sKyopKCcmJSQjIiEgHx4dHBsaGRgXFhUUExIREA8ODQwLCgkIBwYFBAMCAQAA");
             hitSound = new Audio("data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=");
             enemyDieSound = new Audio("data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=");
 
-            // 볼륨 설정
             shootSound.volume = 0.3;
             hitSound.volume = 0.5;
             enemyDieSound.volume = 0.4;
 
             audioInitialized = true;
-            console.log("Audio initialized");
         }
 
         function init() {
@@ -316,16 +312,16 @@
             renderer.shadowMap.enabled = true;
             renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-            const renderScene = new RenderPass(scene, camera);
-            const bloomPass = new UnrealBloomPass(
+            const renderScene = new THREE.RenderPass(scene, camera);
+            const bloomPass = new THREE.UnrealBloomPass(
                 new THREE.Vector2(width, height),
                 1.5,
                 0.4,
                 0.85
             );
-            const filmPass = new FilmPass(0.35, 0.025, 448, false);
+            const filmPass = new THREE.FilmPass(0.35, 0.025, 448, false);
 
-            composer = new EffectComposer(renderer);
+            composer = new THREE.EffectComposer(renderer);
             composer.addPass(renderScene);
             composer.addPass(bloomPass);
             composer.addPass(filmPass);
@@ -377,16 +373,8 @@
             createRain();
             createEnemies();
 
-            controls = new PointerLockControls(camera, document.body);
+            controls = new THREE.PointerLockControls(camera, document.body);
             scene.add(controls.getObject());
-
-            // PointerLock 이벤트 리스너
-            controls.addEventListener('lock', () => {
-                console.log("Pointer locked");
-            });
-            controls.addEventListener('unlock', () => {
-                console.log("Pointer unlocked");
-            });
 
             setupEventListeners();
             window.addEventListener('resize', onWindowResize);
@@ -560,13 +548,10 @@
 
         function setupEventListeners() {
             startBtn.addEventListener('click', () => {
-                // 1. 오디오 초기화
                 initAudio();
-                // 2. 음악 재생
                 if (backgroundMusic) {
-                    backgroundMusic.play().catch(e => console.warn("Background music play failed:", e));
+                    backgroundMusic.play().catch(e => console.warn("Music play failed:", e));
                 }
-                // 3. 게임 시작
                 startScreen.style.display = 'none';
                 controls.lock();
             });
@@ -672,7 +657,6 @@
         function shoot() {
             if (!audioInitialized) return;
             if (shootSound) {
-                shootSound.currentTime = 0;
                 shootSound.play().catch(e => console.warn("Shoot sound failed:", e));
             }
 
@@ -685,7 +669,6 @@
                 if (hitEnemy && hitEnemy.alive) {
                     hitEnemy.health -= 20;
                     if (hitSound) {
-                        hitSound.currentTime = 0;
                         hitSound.play().catch(e => console.warn("Hit sound failed:", e));
                     }
                     createHitEffect(intersects[0].point);
@@ -784,7 +767,6 @@
             enemy.alive = false;
             enemy.mesh.visible = false;
             if (enemyDieSound) {
-                enemyDieSound.currentTime = 0;
                 enemyDieSound.play().catch(e => console.warn("Die sound failed:", e));
             }
             createExplosionEffect(enemy.mesh.position);
@@ -1030,8 +1012,8 @@
             composer.render();
         }
 
-        // 초기화 실행
-        init();
+        // 페이지 로드 후 즉시 init 호출 안 함 → 버튼 클릭 시 시작되도록!
+        // 게임은 startBtn 클릭 시에만 초기화됩니다.
     </script>
 </body>
 </html>
